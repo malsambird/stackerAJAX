@@ -5,6 +5,15 @@ $(document).ready( function() {
 		// get the value of the tags the user submitted
 		var tags = $(this).find("input[name='tags']").val();
 		getUnanswered(tags);
+		$(this).find("input[name='tags']").val("");
+	});
+	$('.inspiration-getter').submit( function(event){
+		// zero out results if previous search has run
+		$('.results').html('');
+		// get the value of the tags the user submitted
+		var tag = $(this).find("input[name='answerers']").val();
+		getTopAnswerers(tag);
+		$(this).find("input[name='answerers']").val("");
 	});
 });
 
@@ -40,7 +49,26 @@ var showQuestion = function(question) {
 
 	return result;
 };
+var showAnswerer = function(answerer) {
+	var result = $('.templates .answerer').clone();
 
+	var answererName = result.find('.Name');
+	answererName.text(answerer.user.display_name);
+	
+	var link = result.find('.profile a');
+	link.attr('href', answerer.user.link);
+	link.text(answerer.user.link);
+
+	var posts = result.find('.posts');
+	posts.text(answerer.post_count);
+
+	var score = result.find('.score');
+	score.text(answerer.score);
+
+
+	return result;
+
+};
 
 // this function takes the results object from StackOverflow
 // and creates info about search results to be appended to DOM
@@ -86,7 +114,35 @@ var getUnanswered = function(tags) {
 		var errorElem = showError(error);
 		$('.search-results').append(errorElem);
 	});
-};
+	};
+
+var getTopAnswerers = function(tag) {
+
+	var tagURL = "http://api.stackexchange.com/2.2/tags/"+tag+"/top-askers/all_time?site=stackoverflow";
+	var result = $.ajax({
+		url: tagURL,
+		dataType: "jsonp",
+		type: "GET",
+		})
+	.done(function(result){
+		var searchResults = showSearchResults(tag, result.items.length);
+
+		$('.search-results').html(searchResults);
+		
+
+		$.each(result.items, function(i, item) {
+			
+			var answerer = showAnswerer(item);
+			$('.results').append(answerer);
+		});
+	})
+	.fail(function(jqXHR, error, errorThrown){
+		var errorElem = showError(error);
+		$('.search-results').append(errorElem);
+	});
+	};
+
+
 
 
 
